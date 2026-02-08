@@ -1,0 +1,7 @@
+# robots.txt for Word Nexus
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://yourusername.github.io/word-nexus/sitemap.xml
