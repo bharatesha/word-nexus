@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Nexus - Word Grouping Puzzle Game</title>
+    <meta name="description" content="Play Word Nexus - A word grouping puzzle game! Group words into categories, avoid the chaos tile, and challenge yourself across three difficulty levels. Unlimited puzzles!">
+
+    <!-- OpenGraph Meta Tags for Social Sharing -->
+    <meta property="og:title" content="Word Nexus - Word Grouping Puzzle Game">
+    <meta property="og:description" content="Can you group all the words? Test your word association skills with unlimited puzzles across Easy, Medium, and Hard difficulties!">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/667eea/ffffff?text=Word+Nexus">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Word Nexus - Word Grouping Puzzle">
+    <meta name="twitter:description" content="Group words into categories. Avoid the chaos tile. Unlimited puzzles with three difficulty levels!">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 5px;
+            font-size: 2.2em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+
+
+        .difficulty-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+
+        .difficulty-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .difficulty-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: #666;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-value.mistakes {
+            color: #e74c3c;
+        }
+
+        .progress-indicator {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .progress-dot {
+            width: 40px;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.completed {
+            background: linear-gradient(135deg, #84fab0, #8fd3f4);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .word-card {
+            aspect-ratio: 1;
+            background: #f8f9fa;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9em;
+            user-select: none;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+
+        .word-card:hover:not(.solved) {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+        }
+
+        .word-card.selected {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(0.95);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .word-card.correct {
+            animation: correctFlip 0.6s ease;
+        }
+
+        .word-card.incorrect {
+            animation: shake 0.5s ease;
+        }
+
+        .word-card.solved {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(0);
+        }
+
+        .solved-groups {
+            margin-bottom: 15px;
+        }
+
+        .solved-group {
+            background: linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%);
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            animation: slideIn 0.5s ease;
+        }
+
+        .solved-group-title {
+            font-weight: bold;
+            font-size: 1em;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .solved-group-words {
+            color: #34495e;
+            font-size: 0.9em;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .check-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .check-btn:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .check-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .secondary-btn {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .secondary-btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .settings-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: #f0f0f0;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            transition: all 0.3s ease;
+        }
+
+        .settings-btn:hover {
+            background: #e0e0e0;
+            transform: rotate(90deg);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+            animation: popIn 0.5s ease;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 2.5em;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .modal-subtitle {
+            font-size: 1em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .modal-text {
+            font-size: 1.1em;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .share-result {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin: 20px 0;
+            white-space: pre-line;
+            line-height: 1.8;
+        }
+
+        .modal-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-buttons button {
+            width: 100%;
+        }
+
+        .primary-btn {
+            background: #667eea;
+            color: white;
+        }
+
+        .primary-btn:hover {
+            background: #5568d3;
+        }
+
+        .success-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .success-btn:hover {
+            background: #229954;
+        }
+
+        .message {
+            text-align: center;
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-weight: 600;
+            animation: slideDown 0.3s ease;
+            font-size: 0.9em;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .message.warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .settings-panel {
+            text-align: left;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #ccc;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle.active {
+            background: #667eea;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle.active .toggle-slider {
+            transform: translateX(24px);
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #f0f0f0;
+            color: #666;
+            font-size: 0.85em;
+        }
+
+        .footer-links {
+            margin-top: 10px;
+        }
+
+        .footer-links a {
+            color: #667eea;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #667eea;
+            position: absolute;
+            animation: confetti-fall 3s linear forwards;
+            z-index: 9999;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .spinner {
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        @keyframes correctFlip {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(90deg) scale(1.1); }
+            100% { transform: rotateY(0deg) scale(1); }
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .word-card {
+                font-size: 0.8em;
+                padding: 5px;
+            }
+
+            .grid {
+                gap: 8px;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .stat-box {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .stat-label {
+                margin-bottom: 0;
+            }
+
+            .modal-content {
+                padding: 30px 20px;
+            }
+
+            .modal-title {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <button class="settings-btn" id="settings-btn">⚙️</button>
+
+        <div class="header">
+            <h1>🎯 Word Nexus</h1>
+            <p class="subtitle">Group words into categories. Beware the Chaos Tile!</p>
+        </div>
+
+        <div class="difficulty-selector" id="difficulty-selector">
+            <button class="difficulty-btn active" data-difficulty="easy">Easy</button>
+            <button class="difficulty-btn" data-difficulty="medium">Medium</button>
+            <button class="difficulty-btn" data-difficulty="hard">Hard</button>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-box">
+                <div class="stat-label">Best Score</div>
+                <div class="stat-value" id="best-score">—</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Groups</div>
+                <div class="stat-value" id="groups-found">0/4</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-label">Mistakes</div>
+                <div class="stat-value mistakes" id="mistakes-left">4</div>
+            </div>
+        </div>
+
+        <div class="progress-indicator" id="progress-indicator">
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+            <div class="progress-dot"></div>
+        </div>
+
+        <div id="message-container"></div>
+        <div class="solved-groups" id="solved-groups"></div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            Generating puzzle...
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <div class="buttons">
+            <button class="check-btn" id="check-btn" disabled>Check Group</button>
+            <button class="secondary-btn" id="new-game-btn">New Puzzle</button>
+        </div>
+
+        <div class="footer">
+            <strong>Word Grouping Puzzle Game</strong>
+            <p>Unlimited puzzles across three difficulty levels</p>
+            <div class="footer-links">
+                <a href="#" onclick="showStats(); return false;">Stats</a>
+                <a href="#" onclick="showHelp(); return false;">How to Play</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div class="modal" id="win-modal">
+        <div class="modal-content">
+            <div class="modal-title">🎉</div>
+            <div class="modal-subtitle" id="win-subtitle">Amazing!</div>
+            <div class="modal-text" id="win-text"></div>
+            <div class="share-result" id="share-result"></div>
+            <div class="modal-buttons">
+                <button class="success-btn" id="copy-result-btn">📋 Copy Result</button>
+                <button class="primary-btn" id="modal-new-game-btn">🎮 New Puzzle</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <div class="modal-title">⚙️</div>
+            <div class="modal-subtitle">Settings</div>
+            <div class="settings-panel">
+                <div class="setting-item">
+                    <span>Sound Effects</span>
+                    <div class="toggle" id="sound-toggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-buttons">
+                <button class="secondary-btn" id="close-settings-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div class="modal" id="stats-modal">
+        <div class="modal-content">
+            <div class="modal-title">📊</div>
+            <div class="modal-subtitle">Your Stats</div>
+            <div id="stats-content"></div>
+            <div class="modal-buttons">
+                <button class="secondary-btn" id="close-stats-btn">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div class="modal" id="help-modal">
+        <div class="modal-content">
+            <div class="modal-title">❓</div>
+            <div class="modal-subtitle">How to Play</div>
+            <div style="text-align: left; line-height: 1.8;">
+                <p><strong>🎯 Goal:</strong> Group 16 words into 4 categories of 4 words each.</p>
+                <p style="margin-top: 15px;"><strong>⚠️ Chaos Tile:</strong> One word doesn't belong to any category. Avoid it!</p>
+                <p style="margin-top: 15px;"><strong>🎮 How to Play:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li>Select 4 words you think belong together</li>
+                    <li>Click "Check Group" to submit</li>
+                    <li>You have 4 mistakes allowed</li>
+                    <li>Selecting the Chaos Tile counts as a mistake</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>🎯 Difficulty Levels:</strong></p>
+                <ul style="margin-left: 20px; margin-top: 10px;">
+                    <li><strong>Easy:</strong> Simple everyday categories</li>
+                    <li><strong>Medium:</strong> Pop culture, geography, and general knowledge</li>
+                    <li><strong>Hard:</strong> Advanced topics and internet culture</li>
+                </ul>
+            </div>
+            <div class="modal-buttons">
+                <button class="primary-btn" id="close-help-btn">Got it!</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION =====
+        const CONFIG = {
+            MAX_MISTAKES: 4,
+            WORDS_PER_CATEGORY: 4,
+            CATEGORIES_PER_PUZZLE: 4,
+            STORAGE_KEY_PREFIX: 'wordNexus_',
+            DAILY_PUZZLE_EPOCH: new Date('2024-01-01').getTime()
+        };
+
+        // ===== PUZZLE CATEGORIES DATABASE =====
+        // 200+ categories organized by difficulty for maximum variety and replayability
+        const PUZZLE_CATEGORIES = {
+            easy: [
+                // Basic Categories
+                { category: "Fruits", words: ["Apple", "Banana", "Orange", "Mango"], difficulty: "easy" },
+                { category: "Colors", words: ["Red", "Blue", "Green", "Yellow"], difficulty: "easy" },
+                { category: "Farm Animals", words: ["Cow", "Pig", "Chicken", "Horse"], difficulty: "easy" },
+                { category: "Vegetables", words: ["Carrot", "Broccoli", "Spinach", "Potato"], difficulty: "easy" },
+                { category: "Weather", words: ["Sunny", "Rainy", "Cloudy", "Stormy"], difficulty: "easy" },
+                { category: "Body Parts", words: ["Hand", "Foot", "Head", "Arm"], difficulty: "easy" },
+                { category: "Seasons", words: ["Spring", "Summer", "Fall", "Winter"], difficulty: "easy" },
+                { category: "Directions", words: ["North", "South", "East", "West"], difficulty: "easy" },
+                { category: "Numbers", words: ["One", "Two", "Three", "Four"], difficulty: "easy" },
+                { category: "Days", words: ["Monday", "Tuesday", "Friday", "Sunday"], difficulty: "easy" },
+                { category: "Shapes", words: ["Circle", "Square", "Triangle", "Rectangle"], difficulty: "easy" },
+                { category: "Family", words: ["Mother", "Father", "Sister", "Brother"], difficulty: "easy" },
+                { category: "Clothing", words: ["Shirt", "Pants", "Shoes", "Socks"], difficulty: "easy" },
+                { category: "Rooms", words: ["Kitchen", "Bedroom", "Bathroom", "Garage"], difficulty: "easy" },
+                { category: "Emotions", words: ["Happy", "Sad", "Angry", "Scared"], difficulty: "easy" },
+                { category: "Meals", words: ["Breakfast", "Lunch", "Dinner", "Snack"], difficulty: "easy" },
+                { category: "Hot Drinks", words: ["Coffee", "Tea", "Cocoa", "Cider"], difficulty: "easy" },
+                { category: "Cold Drinks", words: ["Water", "Juice", "Soda", "Milk"], difficulty: "easy" },
+                { category: "School Subjects", words: ["Math", "Science", "History", "English"], difficulty: "easy" },
+                { category: "Toys", words: ["Doll", "Ball", "Puzzle", "Blocks"], difficulty: "easy" },
+                { category: "Pets", words: ["Dog", "Cat", "Fish", "Bird"], difficulty: "easy" },
+                { category: "Wild Animals", words: ["Lion", "Tiger", "Bear", "Wolf"], difficulty: "easy" },
+                { category: "Birds", words: ["Sparrow", "Robin", "Crow", "Eagle"], difficulty: "easy" },
+                { category: "Insects", words: ["Bee", "Ant", "Fly", "Spider"], difficulty: "easy" },
+                { category: "Flowers", words: ["Rose", "Tulip", "Daisy", "Lily"], difficulty: "easy" },
+                { category: "Trees", words: ["Oak", "Pine", "Maple", "Willow"], difficulty: "easy" },
+                { category: "Furniture", words: ["Chair", "Table", "Bed", "Sofa"], difficulty: "easy" },
+                { category: "Kitchen Items", words: ["Spoon", "Fork", "Knife", "Plate"], difficulty: "easy" },
+                { category: "Bathroom Items", words: ["Soap", "Towel", "Brush", "Mirror"], difficulty: "easy" },
+                { category: "School Supplies", words: ["Pencil", "Pen", "Eraser", "Ruler"], difficulty: "easy" },
+                { category: "Transportation", words: ["Car", "Bus", "Train", "Plane"], difficulty: "easy" },
+                { category: "Containers", words: ["Box", "Bag", "Jar", "Bottle"], difficulty: "easy" },
+                { category: "Tools", words: ["Hammer", "Wrench", "Drill", "Saw"], difficulty: "easy" },
+                { category: "Metals", words: ["Iron", "Copper", "Silver", "Gold"], difficulty: "easy" },
+                { category: "Liquids", words: ["Water", "Oil", "Honey", "Syrup"], difficulty: "easy" },
+                { category: "Berries", words: ["Strawberry", "Blueberry", "Raspberry", "Blackberry"], difficulty: "easy" },
+                { category: "Breakfast Foods", words: ["Eggs", "Bacon", "Toast", "Cereal"], difficulty: "easy" },
+                { category: "Fast Food", words: ["Burger", "Pizza", "Fries", "Taco"], difficulty: "easy" },
+                { category: "Candy", words: ["Chocolate", "Gummy", "Lollipop", "Caramel"], difficulty: "easy" },
+                { category: "Musical Genres", words: ["Rock", "Pop", "Jazz", "Blues"], difficulty: "easy" }
+            ],
+            medium: [
+                // Technology & Modern Life
+                { category: "Tech Companies", words: ["Apple", "Google", "Microsoft", "Amazon"], difficulty: "medium" },
+                { category: "Social Media", words: ["Facebook", "Instagram", "Twitter", "TikTok"], difficulty: "medium" },
+                { category: "Programming Languages", words: ["Python", "Java", "JavaScript", "Ruby"], difficulty: "medium" },
+                { category: "Video Platforms", words: ["YouTube", "Twitch", "Vimeo", "Netflix"], difficulty: "medium" },
+                { category: "Streaming Services", words: ["Spotify", "Pandora", "SoundCloud", "Tidal"], difficulty: "medium" },
+
+                // Food & Drink
+                { category: "Coffee Types", words: ["Espresso", "Latte", "Cappuccino", "Mocha"], difficulty: "medium" },
+                { category: "Pasta Types", words: ["Spaghetti", "Penne", "Fusilli", "Ravioli"], difficulty: "medium" },
+                { category: "Cheese Types", words: ["Cheddar", "Brie", "Gouda", "Mozzarella"], difficulty: "medium" },
+                { category: "Desserts", words: ["Cake", "Cookie", "Brownie", "Pudding"], difficulty: "medium" },
+                { category: "Sushi Types", words: ["Maki", "Nigiri", "Sashimi", "Temaki"], difficulty: "medium" },
+                { category: "Spices", words: ["Pepper", "Cinnamon", "Ginger", "Turmeric"], difficulty: "medium" },
+                { category: "Pizza Toppings", words: ["Pepperoni", "Mushroom", "Olive", "Sausage"], difficulty: "medium" },
+
+                // Entertainment
+                { category: "Disney Movies", words: ["Frozen", "Moana", "Encanto", "Tangled"], difficulty: "medium" },
+                { category: "Marvel Heroes", words: ["Thor", "Hulk", "Vision", "Falcon"], difficulty: "medium" },
+                { category: "Harry Potter Houses", words: ["Gryffindor", "Slytherin", "Ravenclaw", "Hufflepuff"], difficulty: "medium" },
+                { category: "Video Game Consoles", words: ["PlayStation", "Xbox", "Switch", "Steam"], difficulty: "medium" },
+                { category: "Popular Games", words: ["Minecraft", "Fortnite", "Roblox", "Among"], difficulty: "medium" },
+                { category: "Gaming Terms", words: ["Respawn", "Loot", "Nerf", "Buff"], difficulty: "medium" },
+                { category: "Esports Games", words: ["League", "Dota", "Counter", "Valorant"], difficulty: "medium" },
+
+                // Geography
+                { category: "European Countries", words: ["France", "Germany", "Italy", "Spain"], difficulty: "medium" },
+                { category: "Asian Countries", words: ["Japan", "China", "India", "Thailand"], difficulty: "medium" },
+                { category: "US States", words: ["Texas", "Florida", "California", "New York"], difficulty: "medium" },
+                { category: "World Cities", words: ["Paris", "London", "Tokyo", "Dubai"], difficulty: "medium" },
+                { category: "Continents", words: ["Asia", "Africa", "Europe", "Antarctica"], difficulty: "medium" },
+                { category: "Oceans", words: ["Pacific", "Atlantic", "Indian", "Arctic"], difficulty: "medium" },
+
+                // Nature & Science
+                { category: "Planets", words: ["Mars", "Venus", "Jupiter", "Saturn"], difficulty: "medium" },
+                { category: "Ocean Creatures", words: ["Whale", "Dolphin", "Shark", "Octopus"], difficulty: "medium" },
+                { category: "Gemstones", words: ["Diamond", "Ruby", "Emerald", "Sapphire"], difficulty: "medium" },
+                { category: "Natural Disasters", words: ["Earthquake", "Tornado", "Hurricane", "Tsunami"], difficulty: "medium" },
+                { category: "Renewable Energy", words: ["Solar", "Wind", "Hydro", "Geothermal"], difficulty: "medium" },
+
+                // Arts & Culture
+                { category: "Musical Instruments", words: ["Piano", "Guitar", "Drums", "Violin"], difficulty: "medium" },
+                { category: "Dance Styles", words: ["Ballet", "Salsa", "Tango", "Hip-Hop"], difficulty: "medium" },
+                { category: "Art Supplies", words: ["Paint", "Canvas", "Brush", "Easel"], difficulty: "medium" },
+                { category: "Photography Terms", words: ["Focus", "Exposure", "Aperture", "Shutter"], difficulty: "medium" },
+
+                // Sports & Recreation
+                { category: "Sports", words: ["Soccer", "Basketball", "Tennis", "Baseball"], difficulty: "medium" },
+                { category: "Olympic Sports", words: ["Swimming", "Gymnastics", "Archery", "Fencing"], difficulty: "medium" },
+                { category: "Winter Sports", words: ["Skiing", "Snowboarding", "Hockey", "Skating"], difficulty: "medium" },
+                { category: "Water Sports", words: ["Surfing", "Kayaking", "Diving", "Sailing"], difficulty: "medium" },
+                { category: "Card Games", words: ["Poker", "Bridge", "Rummy", "Solitaire"], difficulty: "medium" },
+                { category: "Board Games", words: ["Chess", "Checkers", "Scrabble", "Monopoly"], difficulty: "medium" },
+
+                // Fashion & Beauty
+                { category: "Clothing Brands", words: ["Nike", "Adidas", "Zara", "Gucci"], difficulty: "medium" },
+                { category: "Shoe Styles", words: ["Sneakers", "Boots", "Sandals", "Loafers"], difficulty: "medium" },
+                { category: "Accessories", words: ["Watch", "Belt", "Scarf", "Sunglasses"], difficulty: "medium" },
+                { category: "Makeup Items", words: ["Lipstick", "Mascara", "Blush", "Foundation"], difficulty: "medium" },
+
+                // Business & Finance
+                { category: "Cryptocurrencies", words: ["Bitcoin", "Ethereum", "Dogecoin", "Litecoin"], difficulty: "medium" },
+                { category: "Payment Apps", words: ["Venmo", "PayPal", "Zelle", "CashApp"], difficulty: "medium" },
+                { category: "Job Titles", words: ["Manager", "Director", "Analyst", "Coordinator"], difficulty: "medium" },
+
+                // Internet Culture
+                { category: "Internet Browsers", words: ["Chrome", "Firefox", "Safari", "Edge"], difficulty: "medium" },
+                { category: "Emoji Categories", words: ["Smileys", "Animals", "Food", "Flags"], difficulty: "medium" },
+                { category: "File Types", words: ["PDF", "JPEG", "PNG", "MP3"], difficulty: "medium" },
+                { category: "Email Providers", words: ["Gmail", "Yahoo", "Outlook", "ProtonMail"], difficulty: "medium" }
+            ],
+            hard: [
+                // Advanced Culture
+                { category: "Greek Gods", words: ["Zeus", "Apollo", "Athena", "Poseidon"], difficulty: "hard" },
+                { category: "Norse Gods", words: ["Odin", "Thor", "Loki", "Freya"], difficulty: "hard" },
+                { category: "Roman Gods", words: ["Jupiter", "Mars", "Neptune", "Venus"], difficulty: "hard" },
+                { category: "Egyptian Gods", words: ["Ra", "Anubis", "Osiris", "Isis"], difficulty: "hard" },
+
+                // Literature & Arts
+                { category: "Shakespeare Plays", words: ["Hamlet", "Macbeth", "Othello", "Tempest"], difficulty: "hard" },
+                { category: "Dickens Novels", words: ["Oliver", "Twist", "Copperfield", "Expectations"], difficulty: "hard" },
+                { category: "Nobel Prize Categories", words: ["Physics", "Chemistry", "Medicine", "Literature"], difficulty: "hard" },
+                { category: "Classical Composers", words: ["Mozart", "Bach", "Beethoven", "Chopin"], difficulty: "hard" },
+                { category: "Renaissance Artists", words: ["Leonardo", "Michelangelo", "Raphael", "Donatello"], difficulty: "hard" },
+                { category: "Art Movements", words: ["Cubism", "Surrealism", "Impressionism", "Dadaism"], difficulty: "hard" },
+                { category: "Literary Devices", words: ["Metaphor", "Simile", "Hyperbole", "Irony"], difficulty: "hard" },
+
+                // Geography Advanced
+                { category: "African Capitals", words: ["Cairo", "Lagos", "Nairobi", "Accra"], difficulty: "hard" },
+                { category: "South American Cities", words: ["Lima", "Bogota", "Santiago", "Caracas"], difficulty: "hard" },
+                { category: "Island Nations", words: ["Iceland", "Madagascar", "Cyprus", "Fiji"], difficulty: "hard" },
+                { category: "Mountain Ranges", words: ["Himalayas", "Andes", "Rockies", "Alps"], difficulty: "hard" },
+
+                // Science & Academia
+                { category: "Chemical Elements", words: ["Helium", "Neon", "Argon", "Xenon"], difficulty: "hard" },
+                { category: "Physics Concepts", words: ["Entropy", "Quantum", "Relativity", "Inertia"], difficulty: "hard" },
+                { category: "Biology Terms", words: ["Mitosis", "Meiosis", "Symbiosis", "Osmosis"], difficulty: "hard" },
+                { category: "Math Branches", words: ["Algebra", "Calculus", "Geometry", "Trigonometry"], difficulty: "hard" },
+                { category: "Scientific Methods", words: ["Hypothesis", "Experiment", "Analysis", "Conclusion"], difficulty: "hard" },
+
+                // Philosophy & Social Sciences
+                { category: "Philosophy Schools", words: ["Stoicism", "Nihilism", "Realism", "Idealism"], difficulty: "hard" },
+                { category: "Ancient Philosophers", words: ["Socrates", "Plato", "Aristotle", "Epicurus"], difficulty: "hard" },
+                { category: "Economic Systems", words: ["Capitalism", "Socialism", "Feudalism", "Mercantilism"], difficulty: "hard" },
+                { category: "Psychological Terms", words: ["Cognition", "Perception", "Motivation", "Emotion"], difficulty: "hard" },
+
+                // Architecture & Design
+                { category: "Architecture Styles", words: ["Gothic", "Baroque", "Modernist", "Brutalist"], difficulty: "hard" },
+                { category: "Design Principles", words: ["Balance", "Contrast", "Emphasis", "Harmony"], difficulty: "hard" },
+                { category: "Famous Architects", words: ["Wright", "Gaudí", "Gehry", "Zaha"], difficulty: "hard" },
+
+                // Music Theory
+                { category: "Musical Keys", words: ["Major", "Minor", "Chromatic", "Pentatonic"], difficulty: "hard" },
+                { category: "Time Signatures", words: ["Common", "Waltz", "March", "Compound"], difficulty: "hard" },
+                { category: "Orchestra Sections", words: ["Strings", "Brass", "Woodwinds", "Percussion"], difficulty: "hard" },
+
+                // Advanced Technology
+                { category: "AI Concepts", words: ["Neural", "Learning", "Training", "Model"], difficulty: "hard" },
+                { category: "Networking Protocols", words: ["HTTP", "TCP", "UDP", "FTP"], difficulty: "hard" },
+                { category: "Database Types", words: ["Relational", "NoSQL", "Graph", "Vector"], difficulty: "hard" },
+                { category: "Cloud Providers", words: ["AWS", "Azure", "Oracle", "IBM"], difficulty: "hard" },
+
+                // Gen-Z & Internet Culture
+                { category: "Gen-Z Slang", words: ["Slay", "Vibe", "Bussin", "Periodt"], difficulty: "hard" },
+                { category: "Internet Acronyms", words: ["FOMO", "YOLO", "GOAT", "Stan"], difficulty: "hard" },
+                { category: "Meme Formats", words: ["Drake", "Distracted", "Wojak", "Pepe"], difficulty: "hard" },
+                { category: "TikTok Trends", words: ["Duet", "Stitch", "Trend", "Sound"], difficulty: "hard" },
+                { category: "Discord Terms", words: ["Server", "Channel", "Nitro", "Emoji"], difficulty: "hard" },
+                { category: "Twitch Emotes", words: ["Kappa", "Poggers", "Monkas", "Pepega"], difficulty: "hard" },
+
+                // Fashion Advanced
+                { category: "Luxury Brands", words: ["Chanel", "Dior", "Prada", "Hermès"], difficulty: "hard" },
+                { category: "Fashion Capitals", words: ["Milan", "Paris", "London", "New York"], difficulty: "hard" },
+                { category: "Fabric Types", words: ["Silk", "Velvet", "Cashmere", "Linen"], difficulty: "hard" },
+
+                // Film & TV
+                { category: "Film Genres", words: ["Noir", "Western", "Thriller", "Documentary"], difficulty: "hard" },
+                { category: "Camera Shots", words: ["Closeup", "Wide", "Tracking", "Dutch"], difficulty: "hard" },
+                { category: "Oscar Categories", words: ["Picture", "Director", "Actor", "Screenplay"], difficulty: "hard" },
+
+                // Historical Periods
+                { category: "Ancient Civilizations", words: ["Sumerian", "Babylonian", "Assyrian", "Persian"], difficulty: "hard" },
+                { category: "Medieval Periods", words: ["Early", "High", "Late", "Renaissance"], difficulty: "hard" },
+                { category: "Historical Eras", words: ["Victorian", "Edwardian", "Georgian", "Regency"], difficulty: "hard" },
+
+                // Linguistics
+                { category: "Language Families", words: ["Romance", "Germanic", "Slavic", "Semitic"], difficulty: "hard" },
+                { category: "Grammar Terms", words: ["Syntax", "Morphology", "Phonology", "Semantics"], difficulty: "hard" },
+                { category: "Writing Systems", words: ["Latin", "Cyrillic", "Arabic", "Devanagari"], difficulty: "hard" },
+
+                // Miscellaneous Advanced
+                { category: "Wine Varieties", words: ["Merlot", "Cabernet", "Chardonnay", "Pinot"], difficulty: "hard" },
+                { category: "Coffee Beans", words: ["Arabica", "Robusta", "Liberica", "Excelsa"], difficulty: "hard" },
+                { category: "Cocktail Types", words: ["Martini", "Mojito", "Manhattan", "Margarita"], difficulty: "hard" },
+                { category: "Tea Varieties", words: ["Green", "Black", "Oolong", "White"], difficulty: "hard" },
+                { category: "Yoga Poses", words: ["Warrior", "Downward", "Cobra", "Lotus"], difficulty: "hard" },
+                { category: "Meditation Types", words: ["Mindfulness", "Transcendental", "Zen", "Vipassana"], difficulty: "hard" },
+                { category: "Tarot Cards", words: ["Fool", "Magician", "Tower", "Death"], difficulty: "hard" },
+                { category: "Zodiac Signs", words: ["Aries", "Taurus", "Gemini", "Cancer"], difficulty: "hard" }
+            ]
+        };
+
+        // Chaos tiles grouped by difficulty - words that don't fit any category
+        const CHAOS_TILES = {
+            easy: [
+                "Robot", "Magic", "Dream", "Storm", "Forest", "Castle", "Dragon", "Wizard",
+                "Rainbow", "Galaxy", "Crystal", "Thunder", "Rocket", "Treasure", "Mystery", "Adventure",
+                "Shadow", "Spirit", "Energy", "Power", "Cosmic", "Wonder", "Journey", "Quest",
+                "Hero", "Legend", "Ancient", "Future", "Mystic", "Portal", "Dimension", "Universe"
+            ],
+            medium: [
+                "Quantum", "Paradox", "Nebula", "Algorithm", "Catalyst", "Phoenix", "Eclipse", "Odyssey",
+                "Nexus", "Cipher", "Vortex", "Spectrum", "Matrix", "Prism", "Zenith", "Apex",
+                "Infinity", "Synergy", "Momentum", "Horizon", "Velocity", "Dynasty", "Chronicle", "Legacy",
+                "Summit", "Pinnacle", "Threshold", "Frontier", "Vista", "Epoch", "Aura", "Essence"
+            ],
+            hard: [
+                "Hegemony", "Zeitgeist", "Entropy", "Axiom", "Dichotomy", "Paradigm", "Ephemeral", "Juxtaposition",
+                "Dialectic", "Heuristic", "Synthesis", "Taxonomy", "Rhetoric", "Aesthetic", "Kinetic", "Semantic",
+                "Cognizant", "Ethereal", "Intrinsic", "Nebulous", "Quintessential", "Ubiquitous", "Visceral", "Zenith",
+                "Archipelago", "Cacophony", "Dichotomy", "Evanescent", "Labyrinthine", "Nomenclature", "Obfuscate", "Parsimony"
+            ]
+        };
+
+        // ===== GAME STATE =====
+        let gameState = {
+            difficulty: 'easy',
+            currentPuzzle: null,
+            selectedWords: [],
+            solvedGroups: [],
+            mistakesRemaining: CONFIG.MAX_MISTAKES,
+            gameOver: false,
+            attempts: [],
+            soundEnabled: true
+        };
+
+        // ===== DOM ELEMENTS =====
+        const elements = {
+            grid: document.getElementById('grid'),
+            checkBtn: document.getElementById('check-btn'),
+            newGameBtn: document.getElementById('new-game-btn'),
+            mistakesLeftEl: document.getElementById('mistakes-left'),
+            groupsFoundEl: document.getElementById('groups-found'),
+            bestScoreEl: document.getElementById('best-score'),
+            messageContainer: document.getElementById('message-container'),
+            solvedGroupsContainer: document.getElementById('solved-groups'),
+            progressIndicator: document.getElementById('progress-indicator'),
+            loading: document.getElementById('loading'),
+            winModal: document.getElementById('win-modal'),
+            settingsModal: document.getElementById('settings-modal'),
+            statsModal: document.getElementById('stats-modal'),
+            helpModal: document.getElementById('help-modal'),
+            difficultySelector: document.getElementById('difficulty-selector')
+        };
+
+        // ===== SEEDED RANDOM GENERATOR =====
+        class SeededRandom {
+            constructor(seed) {
+                this.seed = seed;
+            }
+
+            next() {
+                this.seed = (this.seed * 9301 + 49297) % 233280;
+                return this.seed / 233280;
+            }
+
+            shuffle(array) {
+                const arr = [...array];
+                for (let i = arr.length - 1; i > 0; i--) {
+                    const j = Math.floor(this.next() * (i + 1));
+                    [arr[i], arr[j]] = [arr[j], arr[i]];
+                }
+                return arr;
+            }
+
+            choice(array) {
+                return array[Math.floor(this.next() * array.length)];
+            }
+        }
+
+        // ===== LOCAL STORAGE MANAGER =====
+        const storage = {
+            get(key) {
+                try {
+                    const data = localStorage.getItem(CONFIG.STORAGE_KEY_PREFIX + key);
+                    return data ? JSON.parse(data) : null;
+                } catch (e) {
+                    return null;
+                }
+            },
+
+            set(key, value) {
+                try {
+                    localStorage.setItem(CONFIG.STORAGE_KEY_PREFIX + key, JSON.stringify(value));
+                } catch (e) {
+                    console.error('Storage error:', e);
+                }
+            },
+
+            getBestScore(difficulty) {
+                const scores = this.get('bestScores') || {};
+                return scores[difficulty] || null;
+            },
+
+            updateBestScore(difficulty, mistakes) {
+                const scores = this.get('bestScores') || {};
+                if (!scores[difficulty] || mistakes < scores[difficulty]) {
+                    scores[difficulty] = mistakes;
+                    this.set('bestScores', scores);
+                    return true;
+                }
+                return false;
+            },
+
+            getSoundEnabled() {
+                const setting = this.get('soundEnabled');
+                return setting === null ? true : setting;
+            },
+
+            setSoundEnabled(enabled) {
+                this.set('soundEnabled', enabled);
+            },
+
+            getTotalGamesPlayed() {
+                return this.get('totalGamesPlayed') || 0;
+            },
+
+            incrementGamesPlayed() {
+                const total = this.getTotalGamesPlayed();
+                this.set('totalGamesPlayed', total + 1);
+            }
+        };
+
+        // ===== SOUND SYSTEM =====
+        const sound = {
+            context: null,
+
+            init() {
+                try {
+                    this.context = new (window.AudioContext || window.webkitAudioContext)();
+                } catch (e) {
+                    console.log('Audio not supported');
+                }
+            },
+
+            play(frequency, duration, type = 'sine') {
+                if (!gameState.soundEnabled || !this.context) return;
+
+                const oscillator = this.context.createOscillator();
+                const gainNode = this.context.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(this.context.destination);
+
+                oscillator.frequency.value = frequency;
+                oscillator.type = type;
+
+                gainNode.gain.setValueAtTime(0.3, this.context.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, this.context.currentTime + duration);
+
+                oscillator.start(this.context.currentTime);
+                oscillator.stop(this.context.currentTime + duration);
+            },
+
+            select() {
+                this.play(800, 0.1);
+            },
+
+            correct() {
+                this.play(523.25, 0.1);
+                setTimeout(() => this.play(659.25, 0.1), 100);
+                setTimeout(() => this.play(783.99, 0.2), 200);
+            },
+
+            incorrect() {
+                this.play(200, 0.3);
+            },
+
+            win() {
+                const notes = [523.25, 587.33, 659.25, 783.99, 880.00];
+                notes.forEach((note, i) => {
+                    setTimeout(() => this.play(note, 0.2), i * 100);
+                });
+            }
+        };
+
+        // ===== CONFETTI SYSTEM =====
+        const confetti = {
+            create() {
+                const colors = ['#667eea', '#764ba2', '#84fab0', '#8fd3f4', '#f39c12', '#e74c3c'];
+                for (let i = 0; i < 50; i++) {
+                    setTimeout(() => {
+                        const piece = document.createElement('div');
+                        piece.className = 'confetti';
+                        piece.style.left = Math.random() * 100 + '%';
+                        piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                        piece.style.animationDelay = Math.random() * 0.5 + 's';
+                        piece.style.animationDuration = (Math.random() * 2 + 2) + 's';
+                        document.body.appendChild(piece);
+
+                        setTimeout(() => piece.remove(), 3000);
+                    }, i * 30);
+                }
+            }
+        };
+
+        // ===== PUZZLE GENERATOR =====
+
+        /**
+         * Validates a puzzle to ensure it's solvable and fair
+         * Checks for:
+         * - No duplicate words across categories
+         * - No overlapping category names
+         * - Exactly 4 words per category
+         * - Chaos tile is unique
+         */
+        function validatePuzzle(puzzle) {
+            const allCategoryWords = [];
+            const categoryNames = new Set();
+
+            // Check each category
+            for (const category of puzzle.categories) {
+                // Check category name uniqueness
+                if (categoryNames.has(category.category)) {
+                    return false;
+                }
+                categoryNames.add(category.category);
+
+                // Check exactly 4 words
+                if (category.words.length !== CONFIG.WORDS_PER_CATEGORY) {
+                    return false;
+                }
+
+                // Collect all words
+                allCategoryWords.push(...category.words);
+            }
+
+            // Check for duplicate words across categories
+            const wordSet = new Set(allCategoryWords.map(w => w.toLowerCase()));
+            if (wordSet.size !== allCategoryWords.length) {
+                return false; // Duplicate word found
+            }
+
+            // Check chaos tile doesn't match any category word
+            const chaosWord = puzzle.words.find(w => w.isChaos);
+            if (chaosWord) {
+                const chaosLower = chaosWord.word.toLowerCase();
+                if (wordSet.has(chaosLower)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /**
+         * Generates a valid, solvable puzzle
+         * Uses deterministic seed for daily puzzles to ensure everyone gets the same puzzle
+         */
+        function generatePuzzle(mode, difficulty, seed = null) {
+            const rng = seed !== null ? new SeededRandom(seed) : {
+                next: () => Math.random(),
+                shuffle: (arr) => arr.sort(() => Math.random() - 0.5),
+                choice: (arr) => arr[Math.floor(Math.random() * arr.length)]
+            };
+
+            let attempts = 0;
+            const maxAttempts = 100;
+
+            while (attempts < maxAttempts) {
+                attempts++;
+
+                // Get categories for selected difficulty
+                let availableCategories = [...PUZZLE_CATEGORIES[difficulty]];
+
+                // For medium difficulty, can occasionally mix in easier categories
+                if (difficulty === 'medium' && rng.next() > 0.7) {
+                    availableCategories = [...availableCategories, ...PUZZLE_CATEGORIES.easy.slice(0, 3)];
+                }
+
+                // Shuffle and select 4 unique categories
+                const shuffledCategories = rng.shuffle(availableCategories);
+                const selectedCategories = shuffledCategories.slice(0, CONFIG.CATEGORIES_PER_PUZZLE);
+
+                // Ensure no duplicate category names
+                const categoryNames = new Set(selectedCategories.map(c => c.category));
+                if (categoryNames.size !== CONFIG.CATEGORIES_PER_PUZZLE) {
+                    continue; // Try again with different categories
+                }
+
+                // Check for word overlaps between categories
+                const allWords = [];
+                let hasOverlap = false;
+                const wordSet = new Set();
+
+                for (const cat of selectedCategories) {
+                    for (const word of cat.words) {
+                        const wordLower = word.toLowerCase();
+                        if (wordSet.has(wordLower)) {
+                            hasOverlap = true;
+                            break;
+                        }
+                        wordSet.add(wordLower);
+                        allWords.push({
+                            word: word,
+                            category: cat.category,
+                            isChaos: false
+                        });
+                    }
+                    if (hasOverlap) break;
+                }
+
+                if (hasOverlap) {
+                    continue; // Try again with different categories
+                }
+
+                // Select chaos tile that doesn't conflict with any category word
+                const chaosTiles = CHAOS_TILES[difficulty];
+                let chaosTile = rng.choice(chaosTiles);
+                let chaosAttempts = 0;
+
+                while (wordSet.has(chaosTile.toLowerCase()) && chaosAttempts < 20) {
+                    chaosTile = rng.choice(chaosTiles);
+                    chaosAttempts++;
+                }
+
+                if (chaosAttempts >= 20) {
+                    continue; // Couldn't find unique chaos tile, try again
+                }
+
+                allWords.push({
+                    word: chaosTile,
+                    category: null,
+                    isChaos: true
+                });
+
+                // Shuffle all words for display
+                const shuffledWords = rng.shuffle(allWords);
+
+                const puzzle = {
+                    categories: selectedCategories,
+                    words: shuffledWords,
+                    seed: seed,
+                    difficulty: difficulty
+                };
+
+                // Validate the puzzle
+                if (validatePuzzle(puzzle)) {
+                    return puzzle;
+                }
+            }
+
+            // Fallback: return a simple valid puzzle if generation fails
+            console.warn('Puzzle generation failed after max attempts, using fallback');
+            return generateFallbackPuzzle(difficulty, seed);
+        }
+
+        /**
+         * Generates a guaranteed valid puzzle as fallback
+         */
+        function generateFallbackPuzzle(difficulty, seed) {
+            const rng = seed !== null ? new SeededRandom(seed) : {
+                next: () => Math.random(),
+                shuffle: (arr) => arr.sort(() => Math.random() - 0.5),
+                choice: (arr) => arr[Math.floor(Math.random() * arr.length)]
+            };
+
+            // Use first 4 categories from the difficulty level (guaranteed to be valid)
+            const categories = PUZZLE_CATEGORIES[difficulty].slice(0, 4);
+
+            let allWords = [];
+            categories.forEach(cat => {
+                cat.words.forEach(word => {
+                    allWords.push({
+                        word: word,
+                        category: cat.category,
+                        isChaos: false
+                    });
+                });
+            });
+
+            // Add a safe chaos tile
+            allWords.push({
+                word: CHAOS_TILES[difficulty][0],
+                category: null,
+                isChaos: true
+            });
+
+            allWords = rng.shuffle(allWords);
+
+            return {
+                categories: categories,
+                words: allWords,
+                seed: seed,
+                difficulty: difficulty
+            };
+        }
+
+        // ===== UI FUNCTIONS =====
+        function renderGrid() {
+            elements.grid.innerHTML = '';
+
+            gameState.currentPuzzle.words.forEach((wordObj, index) => {
+                if (gameState.solvedGroups.includes(wordObj.category) && !wordObj.isChaos) {
+                    return;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'word-card';
+                card.textContent = wordObj.word;
+                card.dataset.index = index;
+                card.dataset.word = wordObj.word;
+                card.dataset.category = wordObj.category;
+                card.dataset.isChaos = wordObj.isChaos;
+
+                card.addEventListener('click', () => toggleWordSelection(card));
+                elements.grid.appendChild(card);
+            });
+        }
+
+        function toggleWordSelection(card) {
+            if (gameState.gameOver) return;
+
+            const word = card.dataset.word;
+
+            if (card.classList.contains('selected')) {
+                card.classList.remove('selected');
+                gameState.selectedWords = gameState.selectedWords.filter(w => w !== word);
+            } else {
+                if (gameState.selectedWords.length < 4) {
+                    card.classList.add('selected');
+                    gameState.selectedWords.push(word);
+                    sound.select();
+                }
+            }
+
+            elements.checkBtn.disabled = gameState.selectedWords.length !== 4;
+        }
+
+        function showMessage(text, type = 'success') {
+            const message = document.createElement('div');
+            message.className = `message ${type}`;
+            message.textContent = text;
+            elements.messageContainer.innerHTML = '';
+            elements.messageContainer.appendChild(message);
+
+            setTimeout(() => message.remove(), 3000);
+        }
+
+        function renderSolvedGroups() {
+            elements.solvedGroupsContainer.innerHTML = '';
+
+            gameState.currentPuzzle.categories.forEach(cat => {
+                if (gameState.solvedGroups.includes(cat.category)) {
+                    const groupDiv = document.createElement('div');
+                    groupDiv.className = 'solved-group';
+                    groupDiv.innerHTML = `
+                        <div class="solved-group-title">${cat.category}</div>
+                        <div class="solved-group-words">${cat.words.join(', ')}</div>
+                    `;
+                    elements.solvedGroupsContainer.appendChild(groupDiv);
+                }
+            });
+        }
+
+        function updateStats() {
+            elements.groupsFoundEl.textContent = `${gameState.solvedGroups.length}/${CONFIG.CATEGORIES_PER_PUZZLE}`;
+            elements.mistakesLeftEl.textContent = gameState.mistakesRemaining;
+
+            // Update best score display
+            const bestScore = storage.getBestScore(gameState.difficulty);
+            elements.bestScoreEl.textContent = bestScore !== null ? bestScore : '—';
+
+            // Update progress indicator
+            const dots = elements.progressIndicator.querySelectorAll('.progress-dot');
+            dots.forEach((dot, i) => {
+                if (i < gameState.solvedGroups.length) {
+                    dot.classList.add('completed');
+                } else {
+                    dot.classList.remove('completed');
+                }
+            });
+        }
+
+        // ===== GAME LOGIC =====
+        function checkGroup() {
+            if (gameState.selectedWords.length !== 4 || gameState.gameOver) return;
+
+            const selectedWordObjects = gameState.selectedWords.map(word =>
+                gameState.currentPuzzle.words.find(w => w.word === word)
+            );
+
+            // Record attempt for sharing
+            const attemptEmoji = selectedWordObjects.some(w => w.isChaos) ? '❌' : '🟨';
+
+            // Check for chaos tile
+            if (selectedWordObjects.some(w => w.isChaos)) {
+                gameState.attempts.push('❌');
+                handleIncorrect("Chaos Tile detected! That word doesn't belong to any category.");
+                return;
+            }
+
+            // Check if all same category
+            const categories = selectedWordObjects.map(w => w.category);
+            const firstCategory = categories[0];
+            const allSame = categories.every(cat => cat === firstCategory);
+
+            if (allSame && firstCategory) {
+                gameState.attempts.push('🟩');
+                handleCorrect(firstCategory);
+            } else {
+                gameState.attempts.push('🟨');
+                handleIncorrect("Not quite right. These words don't form a group.");
+            }
+        }
+
+        function handleCorrect(category) {
+            sound.correct();
+
+            document.querySelectorAll('.word-card.selected').forEach(card => {
+                card.classList.add('correct');
+            });
+
+            setTimeout(() => {
+                gameState.solvedGroups.push(category);
+                gameState.selectedWords = [];
+
+                // Animate cards disappearing
+                document.querySelectorAll('.word-card.selected').forEach(card => {
+                    card.classList.add('solved');
+                });
+
+                setTimeout(() => {
+                    renderGrid();
+                    renderSolvedGroups();
+                    updateStats();
+                    showMessage(`Correct! Category: ${category}`, 'success');
+
+                    if (gameState.solvedGroups.length === CONFIG.CATEGORIES_PER_PUZZLE) {
+                        handleWin();
+                    }
+                }, 300);
+            }, 600);
+        }
+
+        function handleIncorrect(message) {
+            gameState.mistakesRemaining--;
+            updateStats();
+            sound.incorrect();
+
+            document.querySelectorAll('.word-card.selected').forEach(card => {
+                card.classList.add('incorrect');
+                setTimeout(() => {
+                    card.classList.remove('incorrect', 'selected');
+                }, 500);
+            });
+
+            gameState.selectedWords = [];
+            elements.checkBtn.disabled = true;
+
+            showMessage(message, 'error');
+
+            if (gameState.mistakesRemaining === 0) {
+                handleLoss();
+            }
+        }
+
+        function handleWin() {
+            gameState.gameOver = true;
+            const mistakesMade = CONFIG.MAX_MISTAKES - gameState.mistakesRemaining;
+
+            sound.win();
+            confetti.create();
+
+            // Track games played
+            storage.incrementGamesPlayed();
+
+            // Check for best score
+            const isNewBest = storage.updateBestScore(gameState.difficulty, mistakesMade);
+            updateStats();
+
+            // Generate share result
+            const shareText = generateShareText(mistakesMade);
+            document.getElementById('share-result').textContent = shareText;
+
+            // Update modal text
+            let subtitle = mistakesMade === 0 ? 'Perfect! No mistakes!' :
+                           mistakesMade === 1 ? 'Excellent! Just 1 mistake!' :
+                           'Well done!';
+
+            if (isNewBest) subtitle += ' 🏆 New Best!';
+
+            document.getElementById('win-subtitle').textContent = subtitle;
+            document.getElementById('win-text').textContent =
+                `You completed the ${gameState.difficulty} puzzle with ${mistakesMade} mistake${mistakesMade !== 1 ? 's' : ''}!`;
+
+            elements.winModal.classList.add('show');
+        }
+
+        function handleLoss() {
+            gameState.gameOver = true;
+            sound.incorrect();
+
+            showMessage("Game Over! No mistakes left.", 'error');
+
+            setTimeout(() => {
+                const chaosTile = gameState.currentPuzzle.words.find(w => w.isChaos);
+                if (chaosTile) {
+                    showMessage(`The Chaos Tile was: "${chaosTile.word}"`, 'warning');
+                }
+
+                // Show remaining categories
+                setTimeout(() => {
+                    gameState.currentPuzzle.categories.forEach(cat => {
+                        if (!gameState.solvedGroups.includes(cat.category)) {
+                            showMessage(`Category: ${cat.category} - ${cat.words.join(', ')}`, 'warning');
+                        }
+                    });
+                }, 2000);
+            }, 1500);
+        }
+
+        function generateShareText(mistakesMade) {
+            const difficulty = gameState.difficulty.charAt(0).toUpperCase() + gameState.difficulty.slice(1);
+
+            let text = `Word Nexus (${difficulty})\n`;
+            text += `${mistakesMade}/${CONFIG.MAX_MISTAKES} mistakes\n\n`;
+
+            // Group attempts by 4
+            const groups = [];
+            for (let i = 0; i < gameState.attempts.length; i += 4) {
+                groups.push(gameState.attempts.slice(i, i + 4).join(''));
+            }
+            text += groups.join('\n');
+
+            text += '\n\nPlay: ' + window.location.href;
+
+            return text;
+        }
+
+        // ===== GAME INITIALIZATION =====
+        function startNewGame() {
+            // Show loading
+            elements.loading.style.display = 'block';
+            elements.grid.style.display = 'none';
+
+            setTimeout(() => {
+                // Generate random puzzle at selected difficulty
+                gameState.currentPuzzle = generatePuzzle('practice', gameState.difficulty, null);
+                gameState.selectedWords = [];
+                gameState.solvedGroups = [];
+                gameState.mistakesRemaining = CONFIG.MAX_MISTAKES;
+                gameState.gameOver = false;
+                gameState.attempts = [];
+
+                elements.messageContainer.innerHTML = '';
+                elements.solvedGroupsContainer.innerHTML = '';
+                elements.checkBtn.disabled = true;
+
+                renderGrid();
+                updateStats();
+
+                elements.loading.style.display = 'none';
+                elements.grid.style.display = 'grid';
+            }, 500);
+        }
+
+        // ===== EVENT LISTENERS =====
+        elements.checkBtn.addEventListener('click', checkGroup);
+        elements.newGameBtn.addEventListener('click', startNewGame);
+
+        // Difficulty selector
+        document.querySelectorAll('.difficulty-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                gameState.difficulty = btn.dataset.difficulty;
+                startNewGame();
+            });
+        });
+
+        // Win modal buttons
+        document.getElementById('copy-result-btn').addEventListener('click', () => {
+            const text = document.getElementById('share-result').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('Result copied to clipboard!', 'success');
+            }).catch(() => {
+                // Fallback
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                textArea.style.position = 'fixed';
+                textArea.style.opacity = '0';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showMessage('Result copied!', 'success');
+            });
+        });
+
+        document.getElementById('modal-new-game-btn').addEventListener('click', () => {
+            elements.winModal.classList.remove('show');
+            startNewGame();
+        });
+
+        // Settings
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            elements.settingsModal.classList.add('show');
+        });
+
+        document.getElementById('close-settings-btn').addEventListener('click', () => {
+            elements.settingsModal.classList.remove('show');
+        });
+
+        document.getElementById('sound-toggle').addEventListener('click', (e) => {
+            const toggle = e.currentTarget;
+            toggle.classList.toggle('active');
+            gameState.soundEnabled = toggle.classList.contains('active');
+            storage.setSoundEnabled(gameState.soundEnabled);
+            if (gameState.soundEnabled) {
+                sound.select();
+            }
+        });
+
+        // Stats modal
+        window.showStats = function() {
+            const totalGames = storage.getTotalGamesPlayed();
+            const bestScores = {
+                easy: storage.getBestScore('easy'),
+                medium: storage.getBestScore('medium'),
+                hard: storage.getBestScore('hard')
+            };
+
+            const content = `
+                <div style="text-align: left; margin: 20px 0;">
+                    <div style="margin-bottom: 20px;">
+                        <strong style="font-size: 1.2em;">🎮 Games Played</strong>
+                        <div style="margin-top: 10px;">
+                            <p style="font-size: 1.5em; font-weight: bold; color: #667eea;">${totalGames}</p>
+                        </div>
+                    </div>
+                    <div>
+                        <strong style="font-size: 1.2em;">🏆 Best Scores (Fewest Mistakes)</strong>
+                        <div style="margin-top: 10px;">
+                            <p>Easy: ${bestScores.easy !== null ? bestScores.easy : '—'}</p>
+                            <p>Medium: ${bestScores.medium !== null ? bestScores.medium : '—'}</p>
+                            <p>Hard: ${bestScores.hard !== null ? bestScores.hard : '—'}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('stats-content').innerHTML = content;
+            elements.statsModal.classList.add('show');
+        };
+
+        document.getElementById('close-stats-btn').addEventListener('click', () => {
+            elements.statsModal.classList.remove('show');
+        });
+
+        // Help modal
+        window.showHelp = function() {
+            elements.helpModal.classList.add('show');
+        };
+
+        document.getElementById('close-help-btn').addEventListener('click', () => {
+            elements.helpModal.classList.remove('show');
+        });
+
+        // Click outside modal to close
+        [elements.winModal, elements.settingsModal, elements.statsModal, elements.helpModal].forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('show');
+                }
+            });
+        });
+
+        // ===== INITIALIZATION =====
+        function init() {
+            sound.init();
+            gameState.soundEnabled = storage.getSoundEnabled();
+
+            // Set sound toggle state
+            const soundToggle = document.getElementById('sound-toggle');
+            if (gameState.soundEnabled) {
+                soundToggle.classList.add('active');
+            }
+
+            // Start game
+            startNewGame();
+
+            // Show help on first visit
+            if (!storage.get('hasVisited')) {
+                setTimeout(() => showHelp(), 1000);
+                storage.set('hasVisited', true);
+            }
+        }
+
+        // Start the game
+        init();
+    </script>
+</body>
+</html>
