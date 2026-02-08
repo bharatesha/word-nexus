@@ -1,0 +1,13 @@
+# GitHub Pages Configuration for Word Nexus
+
+# Disable Jekyll processing - serve as static HTML
+plugins: []
+exclude:
+  - README.md
+  - DEPLOYMENT.md
+  - "*.md"
+  - .gitignore
+
+# Basic site settings
+title: Word Nexus
+description: A challenging word grouping puzzle game
